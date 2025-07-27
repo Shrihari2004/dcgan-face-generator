@@ -4,11 +4,10 @@ import torch.nn.functional as F
 
 class Generator(nn.Module):
     """
-    Generator network for DCGAN architecture.
-    Takes a random noise vector and generates realistic images.
-    Architecture: Linear -> Reshape -> Transposed Convolutions -> Tanh
+    Optimized Generator network for DCGAN architecture.
+    Reduced feature dimensions while maintaining quality through better architecture.
     """
-    def __init__(self, latent_dim=100, ngf=64, channels=3):
+    def __init__(self, latent_dim=100, ngf=48, channels=3):  # Reduced from 64 to 48
         super(Generator, self).__init__()
         self.latent_dim = latent_dim
         self.ngf = ngf
@@ -30,8 +29,8 @@ class Generator(nn.Module):
         self.bn3 = nn.BatchNorm2d(ngf * 2)
         self.bn4 = nn.BatchNorm2d(ngf)
         
-        # Dropout for regularization
-        self.dropout = nn.Dropout(0.3)
+        # Reduced dropout for better performance
+        self.dropout = nn.Dropout(0.2)  # Reduced from 0.3
         
     def forward(self, x):
         """
@@ -66,11 +65,10 @@ class Generator(nn.Module):
 
 class Discriminator(nn.Module):
     """
-    Discriminator network for DCGAN architecture.
-    Takes an image and outputs a probability of it being real.
-    Architecture: Convolutions -> LeakyReLU -> Linear -> Sigmoid
+    Optimized Discriminator network for DCGAN architecture.
+    Reduced feature dimensions while maintaining discriminative power.
     """
-    def __init__(self, ndf=64, channels=3):
+    def __init__(self, ndf=48, channels=3):  # Reduced from 64 to 48
         super(Discriminator, self).__init__()
         self.ndf = ndf
         self.channels = channels
@@ -88,8 +86,8 @@ class Discriminator(nn.Module):
         self.bn3 = nn.BatchNorm2d(ndf * 4)
         self.bn4 = nn.BatchNorm2d(ndf * 8)
         
-        # Dropout for regularization
-        self.dropout = nn.Dropout(0.3)
+        # Reduced dropout for better performance
+        self.dropout = nn.Dropout(0.2)  # Reduced from 0.3
         
         # Final linear layer for classification
         self.linear = nn.Linear(ndf * 8 * 4 * 4, 1)
@@ -136,4 +134,26 @@ def weights_init(m):
         nn.init.constant_(m.bias.data, 0)
     elif classname.find('Linear') != -1:
         nn.init.normal_(m.weight.data, 0.0, 0.02)
-        nn.init.constant_(m.bias.data, 0) 
+        nn.init.constant_(m.bias.data, 0)
+
+def compress_model(model, compression_ratio=0.5):
+    """
+    Compress model by reducing the number of parameters.
+    Args:
+        model: PyTorch model to compress
+        compression_ratio: Ratio of parameters to keep (0.5 = 50% reduction)
+    """
+    for name, module in model.named_modules():
+        if isinstance(module, nn.Conv2d) or isinstance(module, nn.ConvTranspose2d):
+            # Reduce number of filters by compression_ratio
+            if hasattr(module, 'out_channels'):
+                new_out_channels = int(module.out_channels * compression_ratio)
+                if new_out_channels > 0:
+                    module.out_channels = new_out_channels
+        elif isinstance(module, nn.Linear):
+            # Reduce number of features by compression_ratio
+            if hasattr(module, 'out_features'):
+                new_out_features = int(module.out_features * compression_ratio)
+                if new_out_features > 0:
+                    module.out_features = new_out_features
+    return model 

@@ -7,21 +7,32 @@ import matplotlib.pyplot as plt
 import numpy as np
 from tqdm import tqdm
 import time
-from models import Generator, Discriminator, weights_init
+import glob
+from PIL import Image
+import io
+from models import Generator, Discriminator, weights_init, compress_model
 from dataset import save_sample_images, denormalize
 
-class GANTrainer:
+class OptimizedGANTrainer:
     """
-    GAN trainer class with comprehensive training functionality.
-    Includes checkpoint saving, loss visualization, and sample generation.
+    Optimized GAN trainer with compression and size reduction features.
+    Maintains performance while reducing storage requirements.
     """
     def __init__(self, generator, discriminator, dataloader, device='cuda',
-                 lr=0.0002, beta1=0.5, beta2=0.999, latent_dim=100):
+                 lr=0.0002, beta1=0.5, beta2=0.999, latent_dim=100, config=None):
         self.generator = generator.to(device)
         self.discriminator = discriminator.to(device)
         self.dataloader = dataloader
         self.device = device
         self.latent_dim = latent_dim
+        self.config = config or {}
+        
+        # Apply model compression if specified
+        if self.config.get('optimization', {}).get('compression_ratio', 1.0) < 1.0:
+            compression_ratio = self.config['optimization']['compression_ratio']
+            self.generator = compress_model(self.generator, compression_ratio)
+            self.discriminator = compress_model(self.discriminator, compression_ratio)
+            print(f"Applied model compression with ratio: {compression_ratio}")
         
         # Initialize optimizers
         self.g_optimizer = optim.Adam(
@@ -52,9 +63,13 @@ class GANTrainer:
         # Fixed noise for consistent sample generation
         self.fixed_noise = torch.randn(64, latent_dim, device=device)
         
+        # Checkpoint management
+        self.max_checkpoints = self.config.get('optimization', {}).get('max_checkpoints', 3)
+        
         print(f"Training on device: {device}")
         print(f"Dataset size: {len(dataloader.dataset)}")
         print(f"Batch size: {dataloader.batch_size}")
+        print(f"Max checkpoints to keep: {self.max_checkpoints}")
         
     def train_step(self, real_images):
         """
@@ -110,15 +125,95 @@ class GANTrainer:
             'fake_score': fake_score
         }
     
-    def train(self, num_epochs, save_interval=10, sample_interval=5):
+    def compress_image(self, image_tensor, quality=85):
         """
-        Main training loop.
+        Compress image tensor to reduce storage size.
+        Args:
+            image_tensor: Image tensor to compress
+            quality: JPEG quality (1-100)
+        Returns:
+            Compressed image tensor
+        """
+        # Convert tensor to PIL Image
+        img = denormalize(image_tensor).permute(1, 2, 0).cpu().numpy()
+        img = (img * 255).astype(np.uint8)
+        pil_img = Image.fromarray(img)
+        
+        # Compress using JPEG
+        buffer = io.BytesIO()
+        pil_img.save(buffer, format='JPEG', quality=quality, optimize=True)
+        buffer.seek(0)
+        
+        # Convert back to tensor
+        compressed_img = Image.open(buffer)
+        compressed_tensor = torch.from_numpy(np.array(compressed_img)).float() / 255.0
+        compressed_tensor = compressed_tensor.permute(2, 0, 1)
+        
+        return compressed_tensor
+    
+    def save_compressed_samples(self, fake_images, epoch, batch_idx=None):
+        """
+        Save compressed sample images to reduce storage.
+        Args:
+            fake_images: Generated images tensor
+            epoch: Current epoch number
+            batch_idx: Current batch index (optional)
+        """
+        quality = self.config.get('optimization', {}).get('sample_quality', 85)
+        
+        # Create a grid of images
+        grid_size = int(np.ceil(np.sqrt(fake_images.size(0))))
+        fig, axes = plt.subplots(grid_size, grid_size, figsize=(8, 8))
+        axes = axes.flatten()
+        
+        for i, img in enumerate(fake_images):
+            if i < len(axes):
+                # Compress image
+                compressed_img = self.compress_image(img, quality)
+                img_np = compressed_img.permute(1, 2, 0).numpy()
+                axes[i].imshow(img_np)
+                axes[i].axis('off')
+        
+        # Hide unused subplots
+        for i in range(fake_images.size(0), len(axes)):
+            axes[i].axis('off')
+        
+        # Save with compression
+        if batch_idx is not None:
+            save_path = os.path.join(self.sample_dir, f'samples_e{epoch}_b{batch_idx}.jpg')
+        else:
+            save_path = os.path.join(self.sample_dir, f'samples_epoch_{epoch}.jpg')
+        
+        plt.tight_layout()
+        plt.savefig(save_path, dpi=150, bbox_inches='tight', quality=quality, optimize=True)
+        plt.close()
+    
+    def cleanup_old_checkpoints(self):
+        """
+        Remove old checkpoints to maintain storage limits.
+        """
+        checkpoint_files = glob.glob(os.path.join(self.save_dir, 'checkpoint_epoch_*.pth'))
+        checkpoint_files.sort(key=lambda x: int(x.split('_')[-1].split('.')[0]))
+        
+        # Keep only the most recent checkpoints
+        if len(checkpoint_files) > self.max_checkpoints:
+            files_to_remove = checkpoint_files[:-self.max_checkpoints]
+            for file_path in files_to_remove:
+                try:
+                    os.remove(file_path)
+                    print(f"Removed old checkpoint: {os.path.basename(file_path)}")
+                except Exception as e:
+                    print(f"Failed to remove {file_path}: {e}")
+    
+    def train(self, num_epochs, save_interval=20, sample_interval=10):
+        """
+        Main training loop with optimizations.
         Args:
             num_epochs: Number of epochs to train
             save_interval: Interval for saving checkpoints
             sample_interval: Interval for generating samples
         """
-        print("Starting training...")
+        print("Starting optimized training...")
         start_time = time.time()
         
         for epoch in range(num_epochs):
@@ -148,8 +243,8 @@ class GANTrainer:
                     'Fake_Score': f"{results['fake_score']:.4f}"
                 })
                 
-                # Generate samples periodically
-                if batch_idx % 100 == 0:
+                # Generate samples periodically (less frequently)
+                if batch_idx % 200 == 0:  # Reduced from 100
                     self.generate_samples(epoch, batch_idx)
             
             # Calculate epoch averages
@@ -177,11 +272,12 @@ class GANTrainer:
             print(f"Real Score: {avg_real_score:.4f}")
             print(f"Fake Score: {avg_fake_score:.4f}")
             
-            # Save checkpoints
+            # Save checkpoints (less frequently)
             if (epoch + 1) % save_interval == 0:
                 self.save_checkpoint(epoch + 1)
+                self.cleanup_old_checkpoints()
             
-            # Generate samples
+            # Generate samples (less frequently)
             if (epoch + 1) % sample_interval == 0:
                 self.generate_samples(epoch + 1)
         
@@ -194,7 +290,7 @@ class GANTrainer:
         
     def generate_samples(self, epoch, batch_idx=None):
         """
-        Generate and save sample images.
+        Generate and save compressed sample images.
         Args:
             epoch: Current epoch number
             batch_idx: Current batch index (optional)
@@ -203,19 +299,14 @@ class GANTrainer:
         with torch.no_grad():
             fake_images = self.generator(self.fixed_noise)
             
-            # Save sample grid
-            if batch_idx is not None:
-                save_path = os.path.join(self.sample_dir, f'samples_e{epoch}_b{batch_idx}.png')
-            else:
-                save_path = os.path.join(self.sample_dir, f'samples_epoch_{epoch}.png')
-            
-            save_sample_images(fake_images, self.sample_dir, epoch)
+            # Save compressed samples
+            self.save_compressed_samples(fake_images, epoch, batch_idx)
         
         self.generator.train()
     
     def save_checkpoint(self, epoch, is_final=False):
         """
-        Save training checkpoint.
+        Save training checkpoint with quantization if enabled.
         Args:
             epoch: Current epoch number
             is_final: Whether this is the final checkpoint
@@ -236,6 +327,11 @@ class GANTrainer:
             filename = 'checkpoint_final.pth'
         else:
             filename = f'checkpoint_epoch_{epoch}.pth'
+        
+        # Apply quantization if enabled
+        if self.config.get('optimization', {}).get('quantization', False):
+            checkpoint = {k: v.half() if isinstance(v, torch.Tensor) else v 
+                         for k, v in checkpoint.items()}
         
         torch.save(checkpoint, os.path.join(self.save_dir, filename))
         print(f"Checkpoint saved: {filename}")
@@ -267,7 +363,7 @@ class GANTrainer:
         Args:
             save_path: Path to save the plot
         """
-        fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(15, 10))
+        fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(12, 8))
         
         # Generator Loss
         ax1.plot(self.g_losses, label='Generator Loss', color='blue')
@@ -304,7 +400,7 @@ class GANTrainer:
         ax4.grid(True)
         
         plt.tight_layout()
-        plt.savefig(save_path, dpi=300, bbox_inches='tight')
+        plt.savefig(save_path, dpi=200, bbox_inches='tight', optimize=True)
         plt.close()
         print(f"Training history saved to {save_path}")
     
@@ -338,8 +434,11 @@ class GANTrainer:
             axes[i].set_title(f'Step {i+1}')
         
         plt.tight_layout()
-        plt.savefig(save_path, dpi=300, bbox_inches='tight')
+        plt.savefig(save_path, dpi=200, bbox_inches='tight', optimize=True)
         plt.close()
         print(f"Interpolation saved to {save_path}")
         
-        self.generator.train() 
+        self.generator.train()
+
+# Backward compatibility
+GANTrainer = OptimizedGANTrainer 

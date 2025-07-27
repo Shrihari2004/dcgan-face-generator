@@ -1,0 +1,21 @@
+{
+    "training": {
+        "epochs": 50,
+        "batch_size": 32,
+        "learning_rate": 0.0002
+    },
+    "model": {
+        "latent_dim": 100,
+        "ngf": 48,
+        "ndf": 48,
+        "channels": 3,
+        "image_size": 64
+    },
+    "optimization": {
+        "compression_ratio": 0.75,
+        "quantization": true,
+        "max_checkpoints": 3,
+        "compress_samples": true,
+        "sample_quality": 85
+    }
+}

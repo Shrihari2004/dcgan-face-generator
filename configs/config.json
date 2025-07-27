@@ -1,30 +1,30 @@
 {
     "training": {
         "epochs": 100,
-        "batch_size": 64,
+        "batch_size": 32,
         "learning_rate": 0.0002,
         "beta1": 0.5,
         "beta2": 0.999,
-        "save_interval": 10,
-        "sample_interval": 5,
-        "num_workers": 2
+        "save_interval": 20,
+        "sample_interval": 10,
+        "num_workers": 1
     },
     "model": {
         "latent_dim": 100,
-        "ngf": 64,
-        "ndf": 64,
+        "ngf": 48,
+        "ndf": 48,
         "channels": 3,
         "image_size": 64
     },
     "data": {
         "dataset_type": "custom",
         "data_dir": "data",
-        "synthetic_images": 1000
+        "synthetic_images": 500
     },
     "system": {
         "device": "auto",
-        "mixed_precision": false,
-        "pin_memory": true
+        "mixed_precision": true,
+        "pin_memory": false
     },
     "paths": {
         "outputs": "outputs",
@@ -32,5 +32,12 @@
         "checkpoints": "outputs/checkpoints",
         "samples": "outputs/samples",
         "generated": "outputs/generated_samples"
+    },
+    "optimization": {
+        "compression_ratio": 0.75,
+        "quantization": true,
+        "max_checkpoints": 3,
+        "compress_samples": true,
+        "sample_quality": 85
     }
 } 

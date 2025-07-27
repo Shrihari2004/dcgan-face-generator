@@ -49,8 +49,8 @@ dcgan-face-generator/
 ├── configs/               # Configuration files
 ├── sample_data/           # Sample data structure
 ├── docs/                  # Documentation
-├── training_data.zip      # Training dataset (4.3 MB)
-├── model_outputs.zip      # Pre-trained outputs (278 MB)
+├── training_data.zip      # Training dataset
+├── model_outputs.zip      # Pre-trained outputs
 ├── run.py                # Main entry point
 └── README.md             # This file
 ```
@@ -78,7 +78,7 @@ python run.py demo
 
 | Metric | Original | Optimized | Improvement |
 |--------|----------|-----------|-------------|
-| **Project Size** | 983.54 MB | 276.54 MB | **71.9% reduction** |
+| **Project Size** | 983.54 MB | 300.85 MB | **69.4% reduction** |
 | **Model Parameters** | ~2.1M | ~1.6M | **25% reduction** |
 | **Memory Usage** | High | Low | **50% reduction** |
 | **Training Speed** | Standard | Faster | **20% improvement** |
@@ -88,6 +88,7 @@ python run.py demo
 - [Installation Guide](docs/installation.md)
 - [Usage Guide](docs/usage.md)
 - [Troubleshooting](docs/troubleshooting.md)
+- [API Documentation](docs/api.md)
 
 ## 🤝 Contributing
 
@@ -110,82 +111,3 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ---
 
 **🎯 Optimized for minimal footprint, maximum performance!**
-
-## 📋 Setup Instructions
-
-### For Users:
-1. Clone this repository
-2. Extract `training_data.zip` to `data/` directory
-3. Extract `model_outputs.zip` to `outputs/` directory (optional)
-4. Install dependencies: `pip install -r requirements.txt`
-5. Run training: `python run.py train data/faces`
-
-### For Contributors:
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Test thoroughly
-5. Submit a pull request
-
-## 🔍 What's Included
-
-- **Source Code**: Complete DCGAN implementation with optimizations
-- **Training Data**: 1000 synthetic face images (4.3 MB compressed)
-- **Pre-trained Models**: Ready-to-use checkpoints (278 MB)
-- **Documentation**: Comprehensive guides and examples
-- **Scripts**: Utility scripts for training, generation, and cleanup
-- **Configuration**: Optimized settings for best performance
-
-## 🎨 Sample Outputs
-
-The model generates high-quality 64x64 face images with:
-- Realistic facial features
-- Diverse expressions and styles
-- Consistent quality across samples
-- Fast generation speed
-
-## 🛠️ System Requirements
-
-- **Python**: 3.8 or higher
-- **PyTorch**: 1.9.0 or higher
-- **RAM**: 4GB minimum, 8GB recommended
-- **GPU**: 2GB VRAM minimum (CUDA support recommended)
-- **Storage**: 500MB free space
-
-## 📈 Training Progress
-
-Monitor training progress with:
-```bash
-# View logs
-tail -f logs/training.log
-
-# Check generated samples
-ls outputs/samples/
-```
-
-## 🔧 Advanced Configuration
-
-Edit `configs/config.json` to customize:
-- Model architecture parameters
-- Training hyperparameters
-- Optimization settings
-- Output preferences
-
-## 🚨 Troubleshooting
-
-Common issues and solutions:
-- **CUDA out of memory**: Reduce batch size in config
-- **Slow training**: Enable mixed precision training
-- **Poor quality**: Increase training epochs
-- **Storage issues**: Run cleanup script
-
-## 📞 Support
-
-For issues and questions:
-1. Check the [documentation](docs/)
-2. Search existing issues
-3. Create a new issue with details
-
----
-
-**Made with ❤️ for the AI community** 

@@ -36,20 +36,20 @@ def setup_device():
     
     return device
 
-def create_models(latent_dim=100, ngf=64, ndf=64, channels=3):
+def create_models(latent_dim=100, ngf=48, ndf=48, channels=3):
     """
-    Create Generator and Discriminator models.
+    Create optimized Generator and Discriminator models.
     Args:
         latent_dim: Dimension of latent space
-        ngf: Number of generator features
-        ndf: Number of discriminator features
+        ngf: Number of generator features (reduced for optimization)
+        ndf: Number of discriminator features (reduced for optimization)
         channels: Number of image channels
     Returns:
         Tuple of (generator, discriminator)
     """
-    print("Creating Generator and Discriminator models...")
+    print("Creating optimized Generator and Discriminator models...")
     
-    # Create models
+    # Create models with reduced features
     generator = Generator(latent_dim=latent_dim, ngf=ngf, channels=channels)
     discriminator = Discriminator(ndf=ndf, channels=channels)
     
@@ -194,16 +194,16 @@ def main():
                              help='Type of dataset')
     train_parser.add_argument('--epochs', type=int, default=100,
                              help='Number of training epochs')
-    train_parser.add_argument('--batch-size', type=int, default=64,
-                             help='Batch size for training')
+    train_parser.add_argument('--batch-size', type=int, default=32,
+                             help='Batch size for training (optimized)')
     train_parser.add_argument('--image-size', type=int, default=64,
                              help='Size of input images')
     train_parser.add_argument('--latent-dim', type=int, default=100,
                              help='Dimension of latent space')
-    train_parser.add_argument('--ngf', type=int, default=64,
-                             help='Number of generator features')
-    train_parser.add_argument('--ndf', type=int, default=64,
-                             help='Number of discriminator features')
+    train_parser.add_argument('--ngf', type=int, default=48,
+                             help='Number of generator features (optimized)')
+    train_parser.add_argument('--ndf', type=int, default=48,
+                             help='Number of discriminator features (optimized)')
     train_parser.add_argument('--channels', type=int, default=3,
                              help='Number of image channels')
     train_parser.add_argument('--learning-rate', type=float, default=0.0002,
@@ -214,10 +214,10 @@ def main():
                              help='Beta2 for Adam optimizer')
     train_parser.add_argument('--num-workers', type=int, default=2,
                              help='Number of data loader workers')
-    train_parser.add_argument('--save-interval', type=int, default=10,
-                             help='Interval for saving checkpoints')
-    train_parser.add_argument('--sample-interval', type=int, default=5,
-                             help='Interval for generating samples')
+    train_parser.add_argument('--save-interval', type=int, default=20,
+                             help='Interval for saving checkpoints (optimized)')
+    train_parser.add_argument('--sample-interval', type=int, default=10,
+                             help='Interval for generating samples (optimized)')
     train_parser.add_argument('--resume', type=str, default=None,
                              help='Path to checkpoint to resume from')
     
@@ -229,8 +229,8 @@ def main():
                            help='Number of samples to generate')
     gen_parser.add_argument('--latent-dim', type=int, default=100,
                            help='Dimension of latent space')
-    gen_parser.add_argument('--ngf', type=int, default=64,
-                           help='Number of generator features')
+    gen_parser.add_argument('--ngf', type=int, default=48,
+                           help='Number of generator features (optimized)')
     gen_parser.add_argument('--channels', type=int, default=3,
                            help='Number of image channels')
     
