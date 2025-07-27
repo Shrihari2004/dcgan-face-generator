@@ -187,5 +187,3 @@ For issues and questions:
 3. Create a new issue with details
 
 ---
-
-**Made with ❤️ for the AI community** 
