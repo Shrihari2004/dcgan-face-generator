@@ -66,15 +66,18 @@ Thumbs.db
 logs/
 *.log
 
-# Outputs and checkpoints
+# Outputs and checkpoints (original directories - use zip files instead)
 outputs/
 checkpoints/
 samples/
 generated_samples/
 
-# Data directories (these should be large and not tracked)
+# Data directories (original directories - use zip files instead)
 data/synthetic/
 data/real/
+
+# Large zip files (exclude from Git tracking)
+*.zip
 
 # Temporary files
 *.tmp
