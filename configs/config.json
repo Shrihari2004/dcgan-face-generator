@@ -1,0 +1,36 @@
+{
+    "training": {
+        "epochs": 100,
+        "batch_size": 64,
+        "learning_rate": 0.0002,
+        "beta1": 0.5,
+        "beta2": 0.999,
+        "save_interval": 10,
+        "sample_interval": 5,
+        "num_workers": 2
+    },
+    "model": {
+        "latent_dim": 100,
+        "ngf": 64,
+        "ndf": 64,
+        "channels": 3,
+        "image_size": 64
+    },
+    "data": {
+        "dataset_type": "custom",
+        "data_dir": "data",
+        "synthetic_images": 1000
+    },
+    "system": {
+        "device": "auto",
+        "mixed_precision": false,
+        "pin_memory": true
+    },
+    "paths": {
+        "outputs": "outputs",
+        "logs": "logs",
+        "checkpoints": "outputs/checkpoints",
+        "samples": "outputs/samples",
+        "generated": "outputs/generated_samples"
+    }
+} 
