@@ -185,7 +185,7 @@ class OptimizedGANTrainer:
             save_path = os.path.join(self.sample_dir, f'samples_epoch_{epoch}.jpg')
         
         plt.tight_layout()
-        plt.savefig(save_path, dpi=150, bbox_inches='tight', quality=quality, optimize=True)
+        plt.savefig(save_path, dpi=150, bbox_inches='tight')
         plt.close()
     
     def cleanup_old_checkpoints(self):
@@ -441,4 +441,4 @@ class OptimizedGANTrainer:
         self.generator.train()
 
 # Backward compatibility
-GANTrainer = OptimizedGANTrainer 
+GANTrainer = OptimizedGANTrainer

@@ -186,6 +186,12 @@ For issues and questions:
 2. Search existing issues
 3. Create a new issue with details
 
+## 📊 TensorBoard Output
+
+The following image shows the TensorBoard output after training the model for 10 epochs on a synthetic dataset.
+
+![TensorBoard Output](tensorboard.png)
+
 ---
 
-**Made with ❤️ for the AI community** 
+**Made with ❤️ for the AI community**

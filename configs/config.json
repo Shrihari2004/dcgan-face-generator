@@ -11,7 +11,7 @@
     },
     "model": {
         "latent_dim": 100,
-        "ngf": 48,
+        "ngf": 64,
         "ndf": 48,
         "channels": 3,
         "image_size": 64
@@ -40,4 +40,4 @@
         "compress_samples": true,
         "sample_quality": 85
     }
-} 
+}

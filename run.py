@@ -110,7 +110,7 @@ def run_generate(num_samples=64, **kwargs):
             config = load_config()
             if config:
                 model_config = config.get('model', {})
-                cmd += f" --ngf {model_config.get('ngf', 48)}"
+                cmd += f" --ngf {model_config.get('ngf', 64)}"
             
             print(f"Command: {cmd}")
             os.system(cmd)
@@ -181,4 +181,4 @@ Examples:
         show_info()
 
 if __name__ == '__main__':
-    main() 
+    main()

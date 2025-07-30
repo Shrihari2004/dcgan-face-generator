@@ -10,6 +10,8 @@ os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
 import torch
 import torch.nn as nn
 import sys
+import os
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'src'))
 
 def test_imports():
     """Test if all required modules can be imported."""
@@ -254,4 +256,4 @@ def main():
 
 if __name__ == '__main__':
     success = main()
-    sys.exit(0 if success else 1) 
+    sys.exit(0 if success else 1)
