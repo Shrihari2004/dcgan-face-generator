@@ -195,6 +195,3 @@ The following image shows the TensorBoard output after training the model for 10
 >>>>>>> 3ead915af3eefde5e840d91b076cecadef674f39
 ---
 
-**Made with ❤️ for the AI community**
-=======
->>>>>>> 3ead915af3eefde5e840d91b076cecadef674f39
